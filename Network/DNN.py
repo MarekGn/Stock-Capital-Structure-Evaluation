@@ -1,6 +1,6 @@
 import numpy as np
 from tensorflow.python.keras.models import Sequential, load_model
-from tensorflow.python.keras.layers import Dense, Activation, Dropout
+from tensorflow.python.keras.layers import Dense, Activation
 from tensorflow.python.keras.utils.generic_utils import get_custom_objects
 from tensorflow.python.keras import optimizers, backend as K
 from tensorflow.python.keras.callbacks import CSVLogger, Callback
@@ -16,11 +16,9 @@ class DNN():
 
     def create_model(self, input_dim):
         self.model = Sequential()
-        self.model.add(Dense(units=32, input_dim=input_dim, activation='bent'))
-        self.model.add(Dropout(0.05))
-        self.model.add(Dense(units=16, activation='bent'))
-        self.model.add(Dense(units=8, activation='bent'))
-        self.model.add(Dense(units=1, activation='bent'))
+        self.model.add(Dense(units=5, input_dim=input_dim, activation='tanh'))
+        self.model.add(Dense(units=5, activation='bent'))
+        self.model.add(Dense(units=1, activation='tanh'))
 
     def configure(self):
         optimizer = optimizers.Adam(lr=1e-4)
@@ -36,22 +34,8 @@ class DNN():
 
 def load_network(suffix="train"):
     dnn = DNN()
-    dnn.model = load_model("dnn{}.h5".format(suffix))
+    dnn.model = load_model("Results/dnn{}.h5".format(suffix))
     return dnn
-
-
-def create_training_dataset_with_squence(trainData, outputIdx, lookback):
-    # outputIdx is the index of out output column
-    dim_0 = trainData.shape[0] - lookback
-    dim_1 = trainData.shape[1]
-    x = np.zeros((dim_0, lookback, dim_1))
-    y = np.zeros((dim_0,))
-
-    for i in range(dim_0):
-        x[i] = trainData[i:lookback + i]
-        y[i] = trainData[lookback + i, outputIdx]
-    print("Shape of Input and Output data ", np.shape(x), np.shape(y))
-    return x, y
 
 
 class TrainValCallback(Callback):
@@ -63,8 +47,7 @@ class TrainValCallback(Callback):
         currentDistance = logs.get('loss')**2 + logs.get('val_loss')**2
         if currentDistance < self.distance:
             self.distance = currentDistance
-            self.model.save("dnntrainval.h5")
-
+            self.model.save("Results/dnntrainval.h5")
 
 class Bent(Activation):
 
