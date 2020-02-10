@@ -17,23 +17,34 @@ class Population():
             self._check_confrontation(confrontation[0], confrontation[1], dnn)
         self.pop.sort(key=lambda idv: idv.fitness, reverse=True)
 
+    # def _check_confrontation(self, idv1, idv2, dnn):
+    #     if np.sum(idv1.genome) < 1 and np.sum(idv2.genome) < 1:
+    #         genome1 = np.append(idv1.genome, 1 - np.sum(idv1.genome))
+    #         genome2 = np.append(idv2.genome, 1 - np.sum(idv2.genome))
+    #         capital_change = (genome2 / genome1) - 1
+    #         scaled_capital_change = self.scalerX.transform(capital_change.reshape((1,  55)))
+    #         scaled_capital_change = scaled_capital_change.reshape((1, 55))
+    #         result = dnn.predict(scaled_capital_change)
+    #         scaled_result = self.scalerY.inverse_transform(result)
+    #         if scaled_result > 0:
+    #             idv2.fitness += 1
+    #         elif scaled_result < 0:
+    #             idv1.fitness += 1
+    #     if np.sum(idv1.genome) >= 1:
+    #         idv1.fitness -=  1
+    #     if np.sum(idv2.genome) >= 1:
+    #         idv1.fitness -=  1
+
     def _check_confrontation(self, idv1, idv2, dnn):
-        if np.sum(idv1.genome) < 1 and np.sum(idv2.genome) < 1:
-            genome1 = np.append(idv1.genome, 1 - np.sum(idv1.genome))
-            genome2 = np.append(idv2.genome, 1 - np.sum(idv2.genome))
-            capital_change = (genome2 / genome1) - 1
-            scaled_capital_change = self.scalerX.transform(capital_change.reshape((1,  55)))
-            scaled_capital_change = scaled_capital_change.reshape((1, 55))
-            result = dnn.predict(scaled_capital_change)
-            scaled_result = self.scalerY.inverse_transform(result)
-            if scaled_result > 0:
-                idv2.fitness += 1
-            elif scaled_result < 0:
-                idv1.fitness += 1
-        if np.sum(idv1.genome) >= 1:
-            idv1.fitness -=  1
-        if np.sum(idv2.genome) >= 1:
-            idv1.fitness -=  1
+        capital_change = (idv2.genome / idv1.genome) - 1
+        scaled_capital_change = self.scalerX.transform(capital_change.reshape((1,  55)))
+        scaled_capital_change = scaled_capital_change.reshape((1, 55))
+        result = dnn.predict(scaled_capital_change)
+        scaled_result = self.scalerY.inverse_transform(result)
+        if scaled_result > 0:
+            idv2.fitness += 1
+        elif scaled_result < 0:
+            idv1.fitness += 1
 
     def _get_initial_population(self, pop_size, idv_size):
         pop = []
@@ -72,6 +83,8 @@ class Population():
 
     def get_new_pop(self):
         children = []
+        self.pop[0].fitness = 0
+        children.append(self.pop[0])
         while len(children) < self.pop_size:
             choice = np.random.uniform(0, 1, 2)
             parent_1 = None
@@ -96,20 +109,27 @@ class Population():
         self.pop = children
 
     def _add_child_offset(self, children, parent_1, parent_2):
-        offset = np.random.randint(0, len(parent_1.genome[0]))
-        childgenome1 = np.concatenate((parent_1.genome[0][:offset], parent_2.genome[0][offset:]))
+        offset = np.random.randint(0, len(parent_1.genome))
         child1 = Individual(self.idv_size)
-        child1.genome = np.reshape(childgenome1, parent_1.genome.shape)
+        child1.genome = np.concatenate((parent_1.genome[:offset], parent_2.genome[offset:]))
+        child1 = self._map_child(child1)
+        child1.genome = np.reshape(child1.genome, parent_1.genome.shape)
         children.append(child1)
 
-        childgenome2 = np.concatenate((parent_2.genome[0][:offset], parent_1.genome[0][offset:]))
         child2 = Individual(self.idv_size)
-        child2.genome = np.reshape(childgenome2, parent_2.genome.shape)
+        child2.genome = np.concatenate((parent_2.genome[:offset], parent_1.genome[offset:]))
+        child2 = self._map_child(child2)
+        child2.genome = np.reshape(child2.genome, parent_2.genome.shape)
         children.append(child2)
 
     def mutate_population(self, mutation_probability):
         for idv in self.pop:
             self._mutate_idv(idv, mutation_probability)
+
+    def _map_child(self, child):
+        child.genome = np.array([gene/sum(child.genome) for gene in child.genome])
+        return child
+
 
     def _mutate_idv(self, idv, mutation_probability):
         gene_vector = idv.genome

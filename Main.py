@@ -38,15 +38,15 @@ def genetic_training(iterations=100, pop_size=100, idv_size=55, mutation_probabi
     logger = Logger()
     for _ in tqdm(range(iterations), desc="Iterations Progress: "):
         pop.cal_fitness(dnn)
-        logger.log_idv.append(pop.pop[0].genome[0])
-        logger.save_best_genome("best_idv_history")
+        logger.log_idv.append(pop.pop[0].genome)
+        logger.save_best_genome("best_idv_history_pop{}_mut{}_alpha{}3attempt".format(pop_size, mutation_probability, alpha))
         pop.cal_probability(alpha=alpha)
         pop.get_new_pop()
         pop.mutate_population(mutation_probability=mutation_probability)
 
 if __name__ == '__main__':
-    train_network(batchSize=16, epochs=2000)
-    genetic_training(iterations=250, pop_size=75, idv_size=55, mutation_probability=0.02, alpha=1.225)
+    # train_network(batchSize=16, epochs=5000)
+    genetic_training(iterations=10000, pop_size=250, idv_size=55, mutation_probability=0.02, alpha=1.25)
 
 
 

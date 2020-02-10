@@ -16,9 +16,10 @@ class DNN():
 
     def create_model(self, input_dim):
         self.model = Sequential()
-        self.model.add(Dense(units=5, input_dim=input_dim, activation='tanh'))
-        self.model.add(Dense(units=5, activation='bent'))
-        self.model.add(Dense(units=1, activation='tanh'))
+        self.model.add(Dense(units=25, input_dim=input_dim, activation='bent'))
+        self.model.add(Dense(units=25, activation='bent'))
+        self.model.add(Dense(units=15, input_dim=input_dim, activation='bent'))
+        self.model.add(Dense(units=1, activation='bent'))
 
     def configure(self):
         optimizer = optimizers.Adam(lr=1e-4)
